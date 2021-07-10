@@ -1,0 +1,721 @@
+---
+title: 'Grip Strength Project'
+authors: "Clare Hayes"
+date: "December 2020"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+fontsize: 14pt
+mainfont: San Serif
+header-includes: \usepackage{amsmath}
+always_allow_html: true
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(skimr)
+library(dplyr)
+library(haven)
+library(dummies)
+library(ggplot2)
+library(ggpubr)
+library(GGally)
+library(gridExtra)
+library(grid)
+library(fastDummies)
+library(ggResidpanel)
+library(jtools)
+library(leaps)
+library(car)
+library(olsrr)
+library(stargazer)
+library(Stat2Data)
+library(rms)
+library(xtable)
+library(lmtest)
+library(kableExtra)
+
+setwd("C:/Users/admin/Documents/Learning from data")
+regression_data = read.csv("regression_data.csv", header = T, sep = ",", dec = ".")
+final.dataset1.EDA1 = read.csv("FinalDS1_EDA.csv", header = T, sep = ",", dec = ".")
+final.dataset2.EDA2 = read.csv("FinalDS2_EDA.csv", header = T, sep = ",", dec = ".")
+```
+#INTRODUCTION
+
+This paper’s focus is on the investigation of grip strength for adults (20-70 years), living in the USA. Examination, demographic and other questionnaire data were deployed (2013-2014 NHANES survey) [1]. The primary research objective was to investigate the association between combined grip strength and health conditions as well as other risk factors for the target population. A secondary objective was also considered, towards examining the 10 % greater grip strength hypothesis for the dominant hand.
+
+Considering the outcome variable, grip test measurement relates with the isometric grip strength, as measured by using a handgrip dynamometer. The test is viewed as a general health screening tool that can indicate muscle health, especially in the hands and forearms. Grip strength testing is also used to compare the dominant and non-dominant hand's grip strengths. A rule, known as the ‘10 % rule’, states that the dominant hand has a 10 % greater grip strength than the non-dominant hand and it is often used as a guideline for physical therapy treatment plans. 
+
+A literature review was first conducted to gather evidence on what variables may affect grip strength as well as to collect  evidence on the ‘10 %’ dominant hand rule. The review suggested that many health conditions and risk factors could impact grip strength for people aged 20-70 years old. Grip strength has been considered as an indicator of  health status and physical abilities indirectly, whilst an association has also been found with various nutritional, socioeconomic statuses. Grip strength weakens with age, with a peak in early adult life, a stable profile through to midlife and a steady reduction from midlife onwards [2]. Males are on average stronger than females from adolescence onwards [2].  Gender and age, followed by body length and obesity, have been observed with the highest predictive value for handgrip strength amongst healthy populations [3].
+
+Associations of grip strength with cardiovascular, respiratory, and cancer outcomes as well as all-cause mortality have been investigated before in the context of a prospective cohort study[4]. These associations were independent of confounders, but several were weaker in older age categories. Better handgrip strength has also been associated with cardiac structure and function[5]. With possible relevance to cardiovascular health as well, another study examined the relationship of grip strength to blood pressure and the risk of hypertension[6]. An increased grip strength was found to be associated with higher diastolic blood pressure, in men and women. Whilst in men, a higher grip strength was associated with an increased risk of hypertension   after   adjusting   for   age,   BMI,   smoking   and   drinking   status[6]. Furthermore, the relationship of diabetes (type 2) as well as glucose tolerance with muscle strength has been studied, with a possible explanation that such risk factors impact the metabolic and mechanical functions of muscles[7]. A confirmed diabetes status was associated with a significantly lower grip strength, particularly in men[7]. 
+
+In regards, with nutrition, vitamin D blood levels have shown a strong correlation with muscle grip strength even upon adjusting to remove the association with physical   activity[8]. Among   elderly   men,   it   has   been   found   that   excessive carbohydrate and inadequate protein intake led to lower grip strength[9]. Risk factors such as alcohol consumption appear to be inclusive in regards to its association with changes in muscle grip strength. Most prior research has focused on studying   the   relationship  between   alcohol   consumption,  muscle   mass,  and disease, rather than MGS. A recent study conducted in a Japanese population deduced that high alcohol consumption was associated with a greater reduction in muscle strength [10]. In a non-adjusted model, alcohol consumption was positively correlated with a decline in muscle strength whilst adjusting the model for age, sex, and BMI, resulted in a significant positive association between alcohol consumption and a decline in muscle strength[10]. On the other hand, a study done among Japanese community-dwelling persons (> 70 years old), has shown that alcohol consumption may have a protective role in the aging-associated decline in muscle strength, mainly for occasional and moderate drinkers, when compared with the never-drinkers[11].
+
+Measures of grip strength may also be considered as an indicator of the integrity of the central nervous system related to cognitive functions. There is evidence that grip strength and cognitive performance are associated for the elderly but also younger adults, especially considering the dominant hand[12]. When it comes to physical inactivity, other variables, such as age and body size were considered as potential confounding variables[13]. The hand grip strength of a middle aged demographic has also been used as a predictor of old age disability[14].
+Socioeconomic factors, such as income, race, and occupation, have been examined in relation to grip strength. In the case of middle and older aged adults, a potential race and income specificity has been suggested[15]. Moreover, a study on a Malaysian population (18-65 years) has also concluded that gender, hand dominance, age, occupation, weight, and height must be considered when establishing normal values for grip strength[16].
+
+Whilst researching the ‘10 % dominant hand’ rule, a variety of conclusions were found in reported studies. An early, small-sample size study showed that the 10 % rule was valid for right-handed subjects, but left-handed persons showed an equal grip strength in both hands[17]. A separate research study underlined   statistically   significant   differences   between   the   grip   strengths   of dominant   and   non-dominant   hands,   in   favour   of   the   dominant   hand[18].   No significant differences were documented for left-handed people[18][19]. Furthermore, smaller than 10 % differences have also been reported for the dominant hand (0.1-3%) in right-handed participants[19]. It should be noted that multiple regression   analysis   has   previously   demonstrated   that   the   dominant   hand   grip strength is positively associated with other factors such as height and BMI, and negatively associated with age for both sexes, therefore indicating that there other confounding factors beyond the dominant hand factor, which can influence the 10 % rule [20].
+
+#DATA
+
+The data and variables used in this paper’s data analysis were collected via the online database of the Center for Disease Control and Prevention (CDC), an organisation based in the United States of America. The datasets were exported via the various sections of  NHANES Questionnaires and Datasets (2013-2014).[1] Following the literature review, the following datasets and variables were used for the exploratory data analysis, with a choice kept later for the regression analysis as well. The sequence number (SEQN)  was used as a common factor to perform any necessary dataset merging steps: 
+
+- Muscle grip strength (MGX_H): combined grip strength (kg) (MGDCGSZ), grip test (1-3) effort variables: (MGXH1T1E,   MGXH1T2E, MGXH1T3E, MGXH2T1E, MGXH2T2E, MGXH2T3E).
+
+- Demographics (DEMO_H):, Gender (RIAGENDR), Age (RIAGEYR), race (RIDRETH1), education level (adults-20+ yrs)        (DMDEDUC2).
+
+- Cardiovascular Health (CDQ_H): pain or discomfort in chest (adults-40+ yrs) (CDQ001).
+
+- Diabetes (DIQ_H): doctor-confirmed diabetes (DIQ010). 
+
+- Weight History (WHQ_J): height (inches) (WHD010), weight (pounds) (WHD020). 
+
+- Alcohol (ALQ_H): number of alcoholic drinks/day, (ALQ130), days of 4/5 drinks (ALQ141).
+
+- Physical Activity (PAQ_J): sedentary activity minutes/day (PAQ680).
+
+- Current Health Status (HSQ_J): general health condition (HSD010).
+
+- Drug Use (DUQ_J): times injected drugs/lifetime (DUQ410),  days /month for using four types of drugs
+  (DUQ280, DUQ320, DUQ360, DUQ230).
+  
+- Occupation (OCQ_H): current occupation (OCD241).
+
+- Cognitive (CFQ_H): Cognitive functioning status (adults 60+ yrs) (CFASTAT).
+
+
+Throughout the EDA process it was noted that a number of variables of interest had large numbers of missing observations. Large amounts of missing observations can still create meaningful models with the use of imputation[21], however imputation was not completed though for this paper. It was decided to refrain from using variables with large amounts of missing observations. Through research, it was found that 25 % of missing observations could be considered high due to the coverage dropping to 86 % and the error rate being nearly three times as high as it should be [22].
+From the above data sets list, there were variables of interest which were not used in this paper for a more detailed analysis due to concerns over large amounts of missing observations. These variables include: ALC141Q (ca. 80 % ‘missing’), DMDEDUC2 (ca. 43 % missing), as well as the variables under the DUQ_J data set: DUQ410Q (ca. 98 % ‘missing’), DUQ230 (ca. 89 % ‘missing’), DUQ280 (ca. 98 % ‘missing’), DUQ320 (ca. 99 % ‘missing’) and DUQ360 (ca. 99 % ‘missing’). Similarly, the occupation variable OCD241 had a high missing observations score (ca. 47 % ‘missing’), while a first box plot indicated a very wide range of responses for most occupations. Moreover, CFSATAT had an unequal ratio between the 3levels of cognitive tests completion; hence not allowing to make any safe conclusions (‘3 tests completion’ level: ca. 92 % of the observations). 
+
+The issue of 'questionable observations' was also raised during this analysis for some variables. Specifically, this was found under MGXH1T1E, MGXH2T1E, MGXH1T2E, MGXH2T2E, MGXH1T3E, and MGXH2T3E. These variables refer to the effort applied by the examined subjects, which was characterised as maximal or questionable.  The method of managing these questionable observations was simply to remove them from the datasets. This method was justified by literature found on the topic of data quality assessment, arguing that improved data quality due to the process of identifying and removing data is not recommended [23]. As the variables had already been highlighted as questionable by the clinicians who took the measurements;  this was taken into consideration when cleaning the data before any further analysis. 
+
+Confounding variables were considered during this study. Variables such as age, body size, and physical inactivity could be confounding variables in the study, as also presented earlier in the literature review.  It should also be mentioned that using the height (WHD010) and weight (WHD020) data, the body mass index (BMI) was calculated (continuous numerical variable) for the observations that were kept in the ‘cleaned’ dataset. Transforming the BMI variable into a categorical variable was used only for the exploratory data analysis (EDA) whereas the continuous numerical version was used for the regression analysis[24][25]. 
+
+The variables chosen for this paper were done so by equally studying relevant literature, performing exploratory data analysis and using regression model building techniques. In the end only the most relevant variables that were chosen by a model building algorithm and were proposed in the final model (see ‘Methods’ section). 
+
+#DATA EXPLORATION
+
+Substantial data exploration of the datasets and variables of interest was conducted prior to any form of formal model building. This exploration also guided which variables would be considered for modeling. As mentioned in the ‘Data’ section, the % of missing observations per variable was also used as control in the overall data quality assessment.  Some examples of graphical exploration between regressor variables and combined grip strength (MGDCGSZ) are presented below. 
+
+###Race & gender vs Grip Strength 
+
+Race and especially gender have shown in literature a strong association with grip strength; hence they were considered for further exploratory analysis in the present study as well.  Figure 1 shows box plots illustrating the relationship between race, gender, and combined grip strength (Kg) as well as bar graphs that show the count of participants for each race and gender category. 
+
+
+```{r include=FALSE}
+
+regression_data = read.csv("regression_data.csv", header = T, sep = ",", dec = ".")
+final.dataset1.EDA1 = read.csv("FinalDS1_EDA.csv", header = T, sep = ",", dec = ".")
+final.dataset2.EDA2 = read.csv("FinalDS2_EDA.csv", header = T, sep = ",", dec = ".")
+```
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+#barchart for gender
+gender.barchart <- ggplot(final.dataset1.EDA1, aes(x=factor(gender_cat))) +
+geom_bar(width = 0.3, fill = "steelblue")
+
+```
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+#barchart for race
+race.barchart <- ggplot(final.dataset1.EDA1, aes(x=factor(race_cat))) +
+geom_bar(width = 0.7, fill = "steelblue") + theme(axis.text.x = element_text(angle = 45, size = 5, hjust = 1), axis.title.x = element_blank())
+```
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+#gender-grip strength boxplot
+gender.boxplot <- ggplot(final.dataset1.EDA1, aes(x=gender_cat, y=MGDCGSZ)) +
+geom_boxplot(fill="navyblue", alpha=0.8) +
+labs(x = "gender", y= "Grip strength")
+
+```
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE }
+#race-grip strength boxplot
+race.boxplot <- ggplot(final.dataset1.EDA1, aes(x=as.factor(race_cat), y=MGDCGSZ)) +
+geom_boxplot(fill="navyblue", alpha=0.8) +
+labs(x ="race", y= "Grip strength") + theme(axis.text.x = element_text(angle = 45, size = 5, hjust = 1), axis.title.x = element_blank())
+```
+
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE }
+grid.arrange(gender.barchart, race.barchart, gender.boxplot, race.boxplot, 
+             top = "Gender and race",widths = c(1, 1),
+             layout_matrix = rbind(c(1, 2),
+                                   c(3, 4)))
+```
+The frequency analysis indicates a relatively homogenous representation of males (49.17 %) and females (50.83 %). Regarding race, White consists of 36.11 % of the study population, followed by ‘non-Hispanic black’ (22.28 %),  ‘Mexican-American’ (17 %), other races - including multi-racial (15.17 %) and other hispanic (0.094 %). 
+With regards to the mean combined grip strength (kg) and gender, there is a large difference between females (59.1 Kg) and males (91.7 Kg). When it comes to race, the differences in the mean combined grip strength are small with the exception of 1 category only. This is shown by the following (mean) values: ‘Mexican-American’ (74.4 Kg), ‘White’ (76.1 Kg), ‘other Hispanic’ (72.1 Kg) and ‘other’ (73.4 Kg), and finally ‘non-Hispanic Black’ (80.5) Kg.
+
+
+###BMI, Age, vs Grip Strength
+
+Both the body mass index (BMI) and age have shown to have an association with grip strength,  Figure 2 uses box plots and bar graphs to study the relative trends in the population of this study. 
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE }
+#boxplot bmi
+bmi.boxplot <- ggplot(final.dataset1.EDA1, aes(x=bmi_cat, y=MGDCGSZ)) +
+  geom_boxplot(fill="steelblue", alpha=0.9) +
+  labs(x = "bmi", y= "Grip strength") + theme(axis.text.x = element_text(angle = 45, size = 5, hjust = 1), axis.title.x = element_blank())
+```
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+#boxplot age
+age.boxplot <- ggplot(final.dataset1.EDA1, aes(x=age_cat, y=MGDCGSZ)) +
+  geom_boxplot(fill="burlywood2", alpha=0.5) +
+  labs(x = "age", y= "Grip strength")
+
+```
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+
+bmi.barchart <- ggplot(final.dataset1.EDA1, aes(x=factor(bmi_cat))) +
+geom_bar(width = 0.7, fill = "steelblue") + theme(axis.text.x = element_text(angle = 45, size = 5, hjust = 1), axis.title.x = element_blank())
+
+```
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+#bar graph age
+age.barchart <- ggplot(final.dataset1.EDA1, aes(x=factor(age_cat))) +
+geom_bar(width = 0.7, fill = "burlywood2") + theme(axis.text.x = element_text(angle = 45, size = 5, hjust = 1), axis.title.x = element_blank())
+```
+
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+grid.arrange(bmi.boxplot, age.boxplot, bmi.barchart, age.barchart, 
+             top = "Bmi and age",widths = c(1, 1),
+             layout_matrix = rbind(c(1, 2),
+                                   c(3, 4)))
+```
+Considering the frequencies, it is interesting to note that only ca. 32% of the respondents belonged to the ‘normal weight’ category,  with ca. 33 % in the combined 3 classes of obesity whilst the pre-obesity also accounting for an additional 34 % of the participants.  For the trends of grip strength, there is a curvature with steady increase in grip strength from the category of ‘underweight’ to ‘obesity class 1’ (at 80 Kg GS) which declines to 75.9 Kg for ‘obesity class 3’.
+
+As for age, there is a relatively homogenous spread of the participants; albeit the middle-aged and elderly population appears less representated (20-29: 21.92 %, 30-39: 21.70 %, 40-49: 21.55 %, 50-59: 17.38 % and 60-70: 17.45 %). THe correlation of age and grip strength shows that there is a maximum at 30-39 years (81.7 kg GS) and a decrease after that, reaching a mean value of 67.4 Kg for the age bracket of 60-70 years old.
+
+###Education vs Grip Strength 
+
+Taking into consideration the socioeconomic dimension, hereby we include the evaluation of the education level variable (DMDEDUC2). Figure 3 (‘mean grip strength by education’) demonstrates the relationships between mean grip strength and educational level achieved by participants over 20 years of age. It can be seen that there is very little difference between the different educational achievements. The means of grip strength are as follows ‘Less than 9th grade’ (71.9 Kg), ‘9-11th grade’ (76.9 Kg), ‘High school graduate’ (77.5 Kg), ‘College degree’ (75.9 Kg),  ‘College graduate or above’ (75.6 Kg). It is noticeable that a ‘College degree’ and ‘College graduate or above’  constituted more than 55 % of the collected responses.  
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+
+mu_e1 <- mean(final.dataset1.EDA1$MGDCGSZ[final.dataset1.EDA1$DMDEDUC2=="1"])
+mu_e2 <- mean(final.dataset1.EDA1$MGDCGSZ[final.dataset1.EDA1$DMDEDUC2=="2"])
+mu_e3 <- mean(final.dataset1.EDA1$MGDCGSZ[final.dataset1.EDA1$DMDEDUC2=="3"])
+mu_e4 <- mean(final.dataset1.EDA1$MGDCGSZ[final.dataset1.EDA1$DMDEDUC2=="4"])
+mu_e5 <- mean(final.dataset1.EDA1$MGDCGSZ[final.dataset1.EDA1$DMDEDUC2=="5"])
+
+mu_e <- c(mu_e1,mu_e2,mu_e3,mu_e4,mu_e5)
+
+barplot(height = mu_e, width=0.5, space = 0.8, xlim= c(0,5), ylim = c(0,100),
+    	col= c("red2","blue2"), axes = T,
+    	names.arg = c("<9th grade","9t-11th","high school", "college", ">college"),
+    	main = "Mean grip strength by education",
+    	ylab = "Combined grip strength (kg)", xlab = "Education")
+
+```
+\newpage
+###Correlation matrices 
+
+(Age, weight, height, BMI, alcohol, sedentary activity, education & health status vs. Grip strength) 
+
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+#Fig 4
+ggpairs(final.dataset1.EDA1, columns = c(5,8,9,13,3),
+    	mapping = ggplot2::aes(color = as.factor(RIAGENDR)),
+    	diag = list(continuous = wrap("barDiag", fill= "blue", alpha=0.5 )),
+    	lower = list(continuous = wrap("smooth", method="loess", alpha = 0.3, size=0.1)))
+```
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+#Fig 5
+ggpairs(final.dataset1.EDA1, columns = c(7,10,11,12,3),
+    	mapping = ggplot2::aes(color = as.factor(RIAGENDR)),
+    	diag = list(continuous = wrap("barDiag", fill= "blue", alpha=0.5 )),
+    	lower = list(continuous = wrap("smooth", method="lm", alpha = 0.3, size=0.1)))
+```
+Figure 4 illustrates a correlation matrix as an additional tool to assess the variables age (RIDAGEYR), height (WHD010), weight (WHD020), BMI, and combined grip strength (MGDCGSZ). Before integrating for the model exploration, it can be seen that the correlation relationship showed to be fairly weak overall, with similar trends for the body size indicators of weight and height, followed by age and BMI when associated with grip strength. For later model considerations, multicollinearity amongst the body size indicators was taken into account upon making final choices.
+
+Figure 5 A correlation matrix assessing the variables education level (DMDEDUC2, health status (HSD010), sedentary/physical activity (PAD680), alcohol consumption (ALQ130), and combined grip strength. MGDCGSZ. The correlation between these variables appeared to be weak. As discussed earlier (###Education vs Grip Strength),  there is no noticeable trend between education and grip strength whilst the majority of the study’s population has a college degree and above education. For the general health status, it can be reported that ca. 81 % of the participants belonged to the ‘good’, or ‘very good’ or ‘excellent’ category, which could explain the weak correlation with the grip strength variable.  In regards to alcohol consumption, there is a sudden increase when going from 0-5 drinks/day in the past 12 months to 6-10 drinks, remaining consistent for higher consumptions; however, this trend could be influenced by the fact that 90 % of the respondents were low-alcohol consumers (0-5 drinks). 
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+#cardio boxplot code-Figure 6
+final.dataset2.EDA2$cardio_cat <- factor(final.dataset2.EDA2$cardio_cat,
+                       	ordered=TRUE,
+                       	levels=c("PAIN",
+                                	"NO PAIN"))
+ffPalette <- c("PAIN" = "red", "no pain" = "green")
+```
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+ggplot(final.dataset2.EDA2, aes(x=cardio_cat, y=MGDCGSZ, fill=cardio_cat)) +
+  geom_boxplot() +
+  labs(x="chest pain",
+   	y="Grip strength (Kg)",
+   	title="Boxplot: Grip strength by cardio med history") +
+  scale_fill_manual(values = ffPalette)
+```
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+#diabetes boxplot-Figure 7
+ggplot(final.dataset2.EDA2, aes(x=DIQ010, y=MGDCGSZ, fill=diabetes_cat)) +
+  geom_boxplot() +
+  labs(x="diagnosed diabetes",
+   	y="Grip strength (Kg)",
+   	title="Boxplot: MGS by doctor-diagnosed diabetes")
+```
+
+
+Figure 6 is a box plot that shows patients who have reported pain or no pain in the chest, linking back to cardiovascular health. 77 % of the participants reported no pain.
+When comparing the combined grip strength, 69.7 kg was reported for the subjects who claimed past pain on the chest and a higher value of 72.2 Kg for those who did not report prior chest pain.
+
+80% responded with a 'no diabetes' profile with the lowest combined grip strength of 69.1 Kg. Approximately 15.6 % confirmed a diabetes profile whilst only 3.98 % gave a borderline response.
+Figure 7 shows the boxplot of diabetes and grip strength, it can be seen that diabetes ‘no’ and ‘borderline’ are quite similar, with 72.1 Kg and 71.9 Kg, respectively.
+The confidence levels for diabetes ‘no’ are quite wide and there are also a few outliers.
+
+\newpage
+#METHODS
+
+After a number of variables were selected in the explorative data analysis,
+it was decided to use some automated selection procedures to build a regression model.
+First a stepwise selection method was used. This method makes a comparison of all
+variables that are in consideration. This test compares the sums of squares of a
+reduced model with the sums of squares of a full model [26].
+The variable of interest is not included in the reduced model, but it is included 
+in the full model. In other words: the reduced model is nested in the full model. 
+The resulting F-statistic is an indication for:
+
+$H_{0}: \beta_{k} = 0$
+
+$H_{a}: \beta_{k} \ne 0$
+
+The stepwise regression method alternates between keeping variables and dropping 
+variables. 
+
+We followed the same strategy again for selecting some variables with a forward 
+selection method. This time interactions were included. Once a variable is included 
+in a forward selection method it cannot be removed later. 
+
+After this selection a final model was chosen based on literature research and the 
+p-values of variables. Residual plots were made to see if the residuals were normally
+distributed and if there was constant variance. As a next step we did some formal
+tests for constancy of variance and for outliers. There was also an attempt for a
+weighted least squares multiple regression.
+
+
+
+```{r results='hide', include=FALSE}
+regression_data = read.csv("regression_data.csv", header = T, sep = ",", dec = ".")
+scope<-(~RIAGENDR+RIDAGEYR+bmi+ALQ130+PAD680+RIDAGEYR+RIAGENDR+bmi+
+          DIQ010yesORborderline+CDQ001)
+
+m0<-lm(MGDCGSZ~1, data=regression_data)
+add1(m0,scope=scope, test="F")
+
+m1<-update(m0,.~.+RIAGENDR)
+add1(m1,scope=scope,test="F")
+
+m2<-update(m1,.~.+RIDAGEYR) ###both significant, no drop
+drop1(m2,test="F")
+
+add1(m2,scope=scope,test="F")
+
+m3<-update(m2, .~.+bmi)  
+drop1(m3,test="F")
+
+add1(m3,scope=scope,test="F")
+
+m4<-update(m3, .~.+DIQ010yesORborderline)   ###diabetes dummies added
+add1(m4,scope=scope,test="F")              ###nothing significant <- procedure stop
+
+```
+
+```{r include=FALSE}
+scope<-(~RIAGENDR+RIDAGEYR+bmi+ALQ130+PAD680+RIDAGEYR+RIAGENDR+bmi+
+          DIQ010yesORborderline+CDQ001+I(bmi*RIAGENDR)+I(bmi*DIQ010yesORborderline)+
+          I(RIAGENDR*DIQ010yesORborderline))
+```
+```{r results='hide', include=FALSE}
+subset <- regsubsets(MGDCGSZ~RIDAGEYR+RIAGENDR+bmi+
+                       DIQ010yesORborderline+CDQ001+ALQ130+PAD680+
+                       bmi*DIQ010yesORborderline+bmi*RIAGENDR+DIQ010yesORborderline*RIAGENDR,
+                     method="forward", data=regression_data)
+summary(subset)
+```
+
+
+
+\newpage
+#RESULTS AND DISCUSSION
+
+A first model was obtained from the stepwise regression. In this first exploration no interactions were used which lead us to the first model below. The add1 R- procedure was used with an entry level of 0.05. The default alpha level to drop a variable is 0.10
+
+After that a forward regression was used with interactions. The result is the second model. Here the Cardiovascular variable (CDQ001) becomes insignificant as well as the last interaction term. We went on with a trial and error approach deleting insignificant terms and came to a final model. 
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+regression_data = read.csv("regression_data.csv", header = T, sep = ",", dec = ".")
+Model1 <- lm(MGDCGSZ~RIDAGEYR+RIAGENDR+bmi+
+                       DIQ010yesORborderline, regression_data)
+Model2 <- lm(MGDCGSZ~RIDAGEYR+RIAGENDR+bmi+
+                       DIQ010yesORborderline+CDQ001+
+                       bmi*DIQ010yesORborderline+bmi*RIAGENDR + RIAGENDR*DIQ010yesORborderline, regression_data)
+Model3 <- lm(MGDCGSZ~RIDAGEYR+RIAGENDR+bmi+
+                       DIQ010yesORborderline+bmi*RIAGENDR+bmi*DIQ010yesORborderline, regression_data)
+```
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+stargazer(Model1, Model2, type="latex", header=FALSE, intercept.bottom = FALSE, single.row = FALSE, title = "Models after stepwise and forward selection", report= "vcs*", dep.var.labels=c("Combined grip strength (kg)"), column.labels=c("Stepwise(no interactions)","forward(interactions included)"),covariate.labels=c("Intercept","Age","Gender","Bmi","Diabetes","Cardiovascular", "Bmi:diabetes", "Gender:bmi", "Gender:diabetes"), no.space = FALSE)
+```
+\newpage
+If we look closer at the first model we explored, it is obvious that there is a
+strong gender effect of 31.786. All p- values are significant and the $R^2$ values indicate that there is a substantial reduction in the total variation of the dependent variable associated with the use of the set of
+independent variables. The variance inflation factors are close to one, so there is no
+multicollinearity.
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+summ(Model1, confint=TRUE, ci.width = 0.95, digits=3, vifs = TRUE)
+```
+
+Although we have a good model, we decided to explore further and include some 
+interactions. As was mentioned before we decided to add interactions with bmi, 
+diabetes and gender. Although the cardiovascular variable was removed in the first
+stepwise regression, we decide to include it again in our model. The main reason
+for this was that it could be an interesting variable for our final model. Interactions 
+with age and cardiovascular have been explored, but overall it made the model worse, 
+so ther are not shown here. 
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+summ(Model2, confint=TRUE, ci.width = 0.95, digits=4)
+
+```
+We see again that the cardiovascular variable is insignificant. Two of the interactions
+p-values are well below 0.05, the gender-diabetes interaction however, is very insignificant.
+We decided to investigate this interaction with a two- way ANOVA interaction plot
+of the factor level means of gender and diabetes.
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+interaction.plot(x.factor = regression_data$gender_cat, 
+                 trace.factor = regression_data$DIQ010yesORborderline, 
+                 response = regression_data$MGDCGSZ, fun = mean, 
+                 type = "l", legend= T, 
+                 xlab = "gender", ylab="Grip strength", axes = T, ylim = c(50,100), 
+                 lty = 1, lwd = 2,
+                 pch = c(19), col = c("red4", "blue4"),
+                 trace.label = "diabetes", leg.bty = "o")
+
+```
+
+In this plot we can see the gender effect very clearly. The red line represents the
+observations with no diabetes and is almost parallel with the line representing the
+subjects with diabetes or borderline diabetes. This confirms the higher p-value of
+the gender diabetes interaction. 
+
+For our final model we decided not to include any insignificant terms so we did not
+include the cardiovascular variable and the gender- diabetes interaction. The results
+of the model that was chosen as or "best" model are given here:
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+Model3 <- lm(MGDCGSZ~RIDAGEYR+RIAGENDR+bmi+
+                       DIQ010yesORborderline+bmi*RIAGENDR+bmi*DIQ010yesORborderline, regression_data)
+summ(Model3, confint=TRUE, ci.width = 0.95, digits=4)
+
+```
+\newpage
+To summarize this regression analysis, the model chosen by us as our best model is:
+
+\begin{eqnarray*}
+Y_{i} = \beta_0 + \beta_{1}x_{i1} + \beta_{2}x_{i2} + \beta_{3}x_{i3} + \beta_{4}x_{i4} + \beta_{23}x_{i2}x_{i3}+ \beta_{34}x_{i3}x_{i4}
+\end{eqnarray*}
+
+Where:
+
+\begin{itemize}
+	\item $Y_{i}$ = Muscle grip strength (kg)
+	\item $x_{i1}$ = Age in years
+	\item $x_{i2}$ = Gender, 1 for male, 0 for female
+	\item $x_{i3}$ = Bmi ($Kg/m^2$)
+	\item $x_{i4}$ = Diabetes, 1 = diagnosed with diabetes or borderline diabetes, 0 = no diabetes
+\end{itemize}
+
+The discussion of this model will be done later. First some diagnostics on the model will be
+done. In the next graph we see a residual plot versus the predicted values. Here we can already
+see that there are some outliers and that the variance probably isn't constant. In the qq-plot 
+and the histogram of the residuals, no severe deviations from normality are observed. 
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+resid_panel(Model3, plots=c("resid", "qq", "hist"))
+```
+
+Next we have some plots for the residuals against the independent variables. Nonconstant
+variance is obvious here for the bmi variable. Outliers are also very clear on the 
+residuals-bmi plot.
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+
+#p3<-ggplot(Model3, aes(bmi, .resid))+geom_point()
+#p3<-p3+stat_smooth(method="loess", se=F)+geom_hline(yintercept=0, col="red", linetype="dashed")
+#p3<-p3+xlab("bmi")+ylab("Residuals")
+#p3<-p3+ggtitle("Residual vs bmi Plot")+theme_bw()
+
+#p<-ggplot(Model3, aes(RIDAGEYR, .resid))+geom_point()
+#p<-p+stat_smooth(method="loess", se=F)+geom_hline(yintercept=0, col="red", linetype="dashed")
+#p<-p+xlab("age")+ylab("Residuals")
+#p<-p+ggtitle("Residual vs bmi Plot")+theme_bw()
+
+#grid.arrange(p3, p, top = "diagnostics", nrow= 1)
+
+resid_xpanel(Model3)
+```
+For a formal test on the constancy of variance we did some formal tests. For the 
+bmi and age variable we used a levene test. F-values for bmi and age are 14.14 and
+11.16. The p-values from these tests were 0.0002 and 0.0009 for bmi and age 
+respectively. 
+
+For testing the variance of the full model a Bruesch Pagan test was used. In the 
+R-output below there is a chi-squaredstatistic of 120.7217 and a very low p-value 
+(4.396764e-28). So from these tests we conlude that we can reject 
+$H_{0}:$ constant variance.
+
+
+```{r results='hide', echo=FALSE , message=FALSE, warning=FALSE}
+options(xtable.comment = FALSE)
+median(regression_data$bmi)
+median(regression_data$RIDAGEYR)
+
+bmivartest <- lm(MGDCGSZ ~ bmi, regression_data)
+bmigroup <- factor(regression_data$bmi<=28)
+agevartest <- lm(MGDCGSZ ~ RIDAGEYR, regression_data)
+agegroup <- factor(regression_data$RIDAGEYR<=53)
+Testage <- leveneTest(residuals(agevartest), group=agegroup)
+Testbmi <- leveneTest(residuals(bmivartest), group=bmigroup)
+tab1 <- xtable(Testbmi, caption="Levene test for constancy of variance of the bmi variable")
+print(tab1, caption.placement = "top")
+tab2 <- xtable(Testage, caption="Levene test for constancy of variance of the age variable")
+print(tab2, caption.placement = "top")
+table(agegroup)
+table(bmigroup)
+```
+
+```{r include=TRUE, echo=FALSE , message=FALSE, warning=FALSE}
+#options(xtable.comment = FALSE)
+#bptest(Model3)
+#ncvTest(Model3)   
+ols_test_breusch_pagan(Model3)
+```
+
+```{r include=FALSE, echo=FALSE , message=FALSE, warning=FALSE}
+
+ols_prep_dsrvf_data(Model3)
+ols_plot_resid_stud_fit(Model3)   #adjust for bonferroni 
+ols_plot_resid_stud(Model3)
+ols_test_outlier(Model3, cut_off = 0.05, n_max = 10) 
+#  studentized with bonferroni
+
+```
+
+```{r results='hide', echo=FALSE , message=FALSE, warning=FALSE}
+qt(.9999835, 1507)
+qt(.999967, 1507)
+
+```
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+ols_plot_resid_stud_fit(Model3)
+```
+
+We also decided to investigate the outliers. We used a formal test to see if any 
+of the absolute values of the cases above can be considered an outlier. 
+The Bonferonni test procedure was used with the following critical value:
+
+$t(1-\alpha/2n;n-p-1)=t(1-0.05/2(1515);1515-7-1=t(.9999835; 1507)=4.164$
+
+Or for a higher alpha level
+
+$t(1-\alpha/2n;n-p-1)=t(1-0.10/2(1515);1515-7-1=t(.999967; 1507)=4.001$
+
+So all outlying cases greater in absolute value can be considered outliers. We 
+used the "ols_prep_dsrvf_data"- command in R to check what the studentized 
+deleted residuals are. So for the most outlying cases in the plot we know now 
+that:
+
+\begin{itemize}
+	\item $obs. 1404 = |-5.128| > 4.164$
+	\item $obs. 345  = | 4.666| > 4.164$ 
+\end{itemize}	
+and:
+\begin{itemize}
+	\item $obs. 366  = |-3.095| < 4.001$
+	\item $obs. 793  = |-3.159| < 4.001$
+	\item $obs. 709  = |-3.544| < 4.001$
+\end{itemize}
+
+So we can conclude from this procedure that the 2 most outlying observations can
+be considered outliers. The Bonferonni is a conservative test procedure for 
+detecting outliers, When using this procedure one has to be aware that further
+investigation of the other extreme cases might be necessary [26].
+
+```{r results='hide', echo=FALSE , message=FALSE, warning=FALSE}
+regression_data2 <- regression_data[-c(1404, 345), ]
+Model4 <- lm(MGDCGSZ~RIDAGEYR+RIAGENDR+bmi+
+                       DIQ010yesORborderline+bmi*RIAGENDR+
+               bmi*DIQ010yesORborderline, regression_data2)
+summ(Model4, digits = 4)
+```
+
+Outlier removal did not improve the model. In fact the p-value of the diabetes variable
+became larger, from 0.0414 to 0.0523. This regression output is not included here.
+We did include plots for the fitted values and the plots to asses normality of the
+error terms.
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+resid_panel(Model4, plots=c("resid", "qq", "hist"))
+```
+
+```{r results='hide', echo=FALSE , message=FALSE, warning=FALSE}
+weights1 <- 1 / lm(abs(Model3$residuals) ~ Model3$fitted.values)$fitted.values^2
+Model5 <- lm(MGDCGSZ~RIDAGEYR+RIAGENDR+bmi+
+                       DIQ010yesORborderline+bmi*RIAGENDR+
+               bmi*DIQ010yesORborderline, regression_data, weights=weights1)
+summ(Model5, confint=TRUE, ci.width = 0.95, digits=3)
+#diabetes insignificant
+#small R^2 improvement
+```
+
+```{r include=FALSE, results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+resid_panel(Model5, plots=c("resid"))
+```
+\newpage
+
+```{r include=FALSE, results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+weights2 <- 1 / lm(abs(Model4$residuals) ~ Model4$fitted.values)$fitted.values^2
+Model6 <- lm(MGDCGSZ~RIDAGEYR+RIAGENDR+bmi+
+                       DIQ010yesORborderline+bmi*RIAGENDR+
+               bmi*DIQ010yesORborderline, regression_data2, weights=weights2)
+```
+
+As a final step an attempt was made to execute a remedial measure for the nonconstancy
+of variance. A weighted least squares model was fitted with $weights = 1/(fitted values)^2$.
+A model was fit with and without outliers. No improvement could
+be detected. Here is a residual plot against the fitted values of the least squares model
+without the two oultiers.
+This model is also the second model in the table below the residual plot.
+
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+resid_panel(Model6, plots=c("resid"))
+
+```
+
+```{r include=FALSE}
+summ(Model6, confint=TRUE, ci.width = 0.95, digits=3)
+```
+ 
+```{r results='asis', echo=FALSE , message=FALSE, warning=FALSE}
+stargazer(Model3, Model6, type="latex", header=FALSE, intercept.bottom = FALSE, single.row = FALSE, title = "Multiple regression models", report= "vcsp*", dep.var.labels=c("Combined grip strength (kg)"), column.labels=c("Before remedial measures","After remedial measures"),covariate.labels=c("Intercept","Age","Gender","Bmi","Diabetes", "Bmi:diabetes", "Gender:bmi"))
+```
+\newpage
+Because the remedial measures that were done did not lead to any improvements we decided
+to keep the model without the outliers removed and without the weighted least squares regression
+performed. So we went back to the previous final model from before, which is also
+the first model in table 2.
+To recapitulate we return here again to the model before remedial measures where executed.
+Which was:
+
+\begin{eqnarray*}
+Y_{i} = \beta_0 + \beta_{1}x_{i1} + \beta_{2}x_{i2} + \beta_{3}x_{i3} + \beta_{4}x_{i4} + \beta_{5}x_{i2}x_{i3}+ \beta_{6}x_{i3}x_{i4}
+\end{eqnarray*}
+
+Where:
+
+\begin{itemize}
+	\item $Y_{i}$ = Muscle grip strength (kg)
+	\item $x_{i1}$ = Age in years
+	\item $x_{i2}$ = Gender, 1 for male, 0 for female
+	\item $x_{i3}$ = Bmi ($Kg/m^2$)
+	\item $x_{i4}$ = Diabetes, 1 = diagnosed with diabetes or borderline diabetes, 0 = no diabetes
+\end{itemize}
+
+The categorical variables indicate a change in intercept of the regression plane. So for a male ($x_{2}=1$)
+without diabetes ($x_{4}=0$) the equation becomes:
+
+\begin{eqnarray*}
+Y_{i} = (\beta_0 + \beta_{2}x_{i2}) + \beta_{1}x_{i1}  + (\beta_{3} + \beta_{5})x_{2}x_{3}
+\end{eqnarray*}
+
+```{r include=FALSE}
+mean(regression_data$RIDAGEYR)
+mean(regression_data$bmi)
+```
+So if we take the mean age (53.61) and the mean bmi (28.81) of the dataset, we get:
+
+\begin{eqnarray*}
+\hat{Y} = (76.294 + 21.04) - 0.521(53.61)  + (0.3265 + 0.3701)28.81 = 89.472
+\end{eqnarray*}
+
+confounders were considered, and as noted in literatue [13], age and body size were confounders that
+were ultimately kept in the final model. Linearity appears to be present in the model. 
+The final model was able to explain 63% of the variance of grip strength as 
+explained by the variables age, gender, bmi, and diabetes.  This finding is inline with scientific literature, 
+as well as known health conditions and 
+risk factors that are associated with changes in grip strength measurements.
+
+#CONCLUSIONS & RECOMMENDATIONS
+
+One of the limitations of the study and the respective CDC datasets is linked with this being an observational study, with most data deriving by interview questionnaires. Therefore, the association of combined grip strength and health conditions as well as risk factors, may not allow for causal inferences. Ambiguity in some of the variables may also have lead to bias in reporting and further analysis. For example, variables in the drug (DUQ_J) and alcohol (ALQ_H) consumption datasets were open for interpretation. For instance, alcohol use is not reported in concentrations of alcohol rather than numbers of drinks (e.g. ALQ_130). Furthermore, literature research has indicated many other factors that can impact grip strength; those were either not listed in the datasets (e.g. cardiac structure [5]) or they were present at the datasets but with many missing observations (see ‘Data’ section). The latter also led to non-inclusion in the model exploration step. Furthermore, during the model building process, non-significant variables were kept via the forward selection method (e.g. CDQ001) with p-values well below 0.05. Additionally, the constant variance check showed that continuous variables included in the final model, age (RIDAGEYR)  and BMI, showed heteroskedasticity whist gender (RIAGENDR1) and diabetes(DIQ010yesORborderline1) were categorical and the variance check was not performed. It should also be noted that diabetes responses of ‘yes’ and ‘borderline’ were merged before including in the final model, being significant but we still recommend a future investigation on diabetes. All variables in the final model, relevant to body size (BMI), age, gender as well as diabetes were also highlighted in the earlier review.[3],[7] We recommend a more controlled trial and an experimental study to investigate the causality of such associations as well.
+
+\newpage
+#CITATIONS
+
+1. NHANES questionnaires, datasets, and related documentation.  https://wwwn.cdc.gov/nchs/nhanes/ContinuousNhanes/Default.aspx?BeginYear=2013
+
+2. Dodds, R. M., Syddall, H. E., Cooper, R., Benzeval, M., Deary, I. J., Dennison, E. M., Der, G., Gale, C. R., Inskip, H. M., Jagger, C., Kirkwood, T. B., Lawlor, D. A., Robinson, S. M., Starr, J. M., Steptoe, A., Tilling, K., Kuh, D., Cooper, C., & Sayer, A. A. (2014). Grip strength across the life course: Normative data from twelve British studies. PLoS ONE, 9(12), e113637. https://doi.org/10.1371/journal.pone.0113637
+
+3. Günther, C. M., Bürger, A., Rickert, M., Crispin, A., & Schulz, C. U. (2008). Grip strength in healthy Caucasian adults: Reference values. The Journal of Hand Surgery, 33(4), 558-565. https://doi.org/10.1016/j.jhsa.2008.01.008
+
+4. Celis-Morales, C. A., Welsh, P., Lyall, D. M., Steell, L., Petermann, F., Anderson, J., Iliodromiti, S., Sillars, A., Graham, N., Mackay, D. F., Pell, J. P., Gill, J., Sattar, N., & Gray, S. R. (2018). Associations of grip strength with cardiovascular, respiratory, and cancer outcomes and all-cause mortality: prospective cohort study of half a million UK Biobank participants. BMJ (Clinical research ed.), 361, k1651. DOI: 10.1136/bmj.k1651    
+5. Sebastian E. Beyer, Mihir M. Sanghvi, Nay Aung, Alice Hosking, Jackie A. Cooper, José Miguel Paiva, Aaron M. Lee, Kenneth Fung, Elena Lukaschuk, Valentina Carapella, Murray A. Mittleman, Soren Brage, Stefan K. Piechnik, Stefan Neubauer, Steffen E. Petersen. Prospective association between handgrip strength and cardiac structure and function in UK adults. PLOS ONE, 2018; 13 (3): e0193124 DOI: 10.1371/journal.pone.0193124
+
+6. Ji, C., Zheng, L., Zhang, R., Wu, Q., & Zhao, Y. (2018). Handgrip strength is positively related to blood pressure and hypertension risk: results from the National Health and nutrition examination survey. Lipids in health and disease, 17(1), 86. https://doi.org/10.1186/s12944-018-0734-4
+
+7. Sayer, A. A., Dennison, E. M., Syddall, H. E., Gilbody, H. J., Phillips, D. I. W., & Cooper, C. (2005). Type 2 Diabetes, Muscle Strength, and Impaired Physical Function: The tip of the iceberg? Diabetes Care, 28(10), 2541–2542. https://doi.org/10.2337/diacare.28.10.2541
+
+8. Von Hurst, P., Conlon, C., & Foskett, A. (2013). Vitamin D status predicts hand-grip strength in young adult women living in Auckland, New Zealand. The Journal of Steroid Biochemistry and Molecular Biology, 136, 330-332. https://doi.org/10.1016/j.jsbmb.2012.11.015
+
+9. Kim, C. R., Jeon, Y., & Jeong, T. (2019). Risk factors associated with low handgrip strength in the older Korean population. PLOS ONE, 14(3), e0214612. https://doi.org/10.1371/journal.pone.0214612 
+10.  Cui, Y., Huang, C., Momma, H., Sugiyama, S., Niu, K., & Nagatomi, R. (2019). The longitudinal association between alcohol consumption and muscle strength: A population-based prospective study. Journal of musculoskeletal & neuronal interactions, 19(3), 294–299. PMID: 31475936
+
+11. Kawamoto, R., Ninomiya, D., Senzaki, K., &amp; Kumagi, T. (2018). Alcohol Consumption is Positively Associated with Handgrip Strength Among Japanese Community-dwelling Middle-aged and Elderly Persons. International Journal of Gerontology, 12(4), 294-298. doi:10.1016/j.ijge.2018.03.005
+
+12. Choudhary, A. K., Jiwane, R., Alam, T., & Kishanrao, S. S. (2016). Grip strength and impact on cognitive function in healthy kitchen workers. Achievements in the Life Sciences, 10(2), 168-174. https://doi.org/10.1016/j.als.2016.11.008
+
+13. Nevill AM, Holder RL. Modelling handgrip strength in the presence of confounding variables: results from the Allied Dunbar National Fitness Survey. Ergonomics. 2000 Oct;43(10):1547-58. doi: 10.1080/001401300750003970. PMID: 11083135
+
+14. Rantanen, T. (1999). Midlife hand grip strength as a predictor of old age disability. JAMA, 281(6), 558. https://doi.org/10.1001/jama.281.6.558
+
+15. Thorpe, Jr., R. J., Simonsick, E., Zonderman, A., & Evans, M. K. (2016). Association between race, poverty status and grip strength in middle to old age adults. Ethnicity & Disease, 26(4), 493. https://doi.org/10.18865/ed.26.4.493
+
+16. Hossain, M. G., Zyroul, R., Pereira, B. P., & Kamarul, T. (2011). Multiple regression analysis of factors influencing dominant hand grip strength in an adult Malaysian population. Journal of Hand Surgery (European Volume), 37(1), 65-70. https://doi.org/10.1177/1753193411414639
+
+17. Petersen, P., Petrick, M., Connor, H., & Conklin, D. (1989). Grip strength and hand dominance: Challenging the 10% rule. American Journal of Occupational Therapy, 43(7), 444-447. https://doi.org/10.5014/ajot.43.7.444
+18. Incel NA, Ceceli E, Durukan PB, Erdem HR, Yorgancioglu ZR. Grip strength: effect of hand dominance. Singapore Med J. 2002 May;43(5):234-7. PMID: 12188074.
+
+19. Armstrong CA, Oldham JA. A comparison of dominant and non-dominant hand strengths. J Hand Surg Br. 1999 Aug;24(4):421-5. doi: 10.1054/jhsb.1999.0236. PMID: 10473148.
+
+20. Hossain, M. G., Zyroul, R., Pereira, B. P., & Kamarul, T. (2011). Multiple regression analysis of factors influencing dominant hand grip strength in an adult Malaysian population. Journal of Hand Surgery (European Volume), 37(1), 65-70. https://doi.org/10.1177/1753193411414639
+
+21. Madley-Dowd, P., Hughes, R., Tilling, K., & Heron, J. (2019). The proportion of missing data should not be used to guide decisions on multiple imputation. Journal of Clinical Epidemiology, 110, 63-73. https://doi.org/10.1016/j.jclinepi.2019.02.016 
+
+22. Schafer, J. L., & Graham, J. W. (2002). Missing data: Our view of the state of the art. Psychological Methods, 7(2), 147-177. https://doi.org/10.1037/1082-989x.7.2.147
+
+23. Business Intelligence (Second Edition), David Loshin,  Chapter 12 - Data Quality, 2013, Pages 165-187.
+
+24. van Walraven C, Hart RG. Leave 'em alone - why continuous variables should be analyzed as such. Neuroepidemiology. 2008;30(3):138-9. doi: 10.1159/000126908. Epub 2008 Apr 17. PMID: 18421216.
+
+25. Naggara O, Raymond J, Guilbert F, Roy D, Weill A, Altman DG. Analysis by categorizing or dichotomizing continuous variables is inadvisable: an example from the natural history of unruptured aneurysms. AJNR Am J Neuroradiol. 2011 Mar;32(3):437-40. doi: 10.3174/ajnr.A2425. Epub 2011 Feb 17. PMID: 21330400.
+
+26. Kutner, Michael H., et al. Applied Linear Statistical Models. McGraw-Hill Education (India) Private Limited, 2013.
+
+
+
+ 
+
+
+
+
+
+
